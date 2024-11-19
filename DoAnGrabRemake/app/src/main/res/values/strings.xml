@@ -1,0 +1,36 @@
+<resources>
+    <string name="app_name">DoAnGrabRemake</string>
+    <string name="CustomerRole">Tôi là khách hàng</string>
+    <string name="DriverRole">Tôi là tài xế</string>
+    <string name="emailTitle">Email</string>
+    <string name="passwordTitle">Password</string>
+    <string name="Login">Đăng nhập</string>
+    <string name="Registration">Đăng ký</string>
+    <string name="Logout">Đăng xuất</string>
+    <string name="btnSetting">Cài đặt</string>
+    <string name="name">Họ và tên</string>
+    <string name="phone">Số điện thoại</string>
+    <string name="btnInfoConfirm">Cập nhật</string>
+    <string name="btnBack">Trở về</string>
+
+
+    // chuc nang
+    <string name="btnCallUber">Gọi xe</string>
+    <string name="txtPickup">Đón tại đây!</string>
+    <string name="txtCallDriver">Đang yêu cầu tài xế ...</string>
+    <string name="txtWaitDriver">Đang tìm tài xế ...</string>
+    <string name="txtFoundDriver">Tài xế đã nhận.</string>
+    <string name="titleMapDriverBooked">Tài xế của bạn.</string>
+    <string name="titleMapCustomerBooked">Đón khách tại đây.</string>
+    <string name="txtDriverHadClosed">Tài xế đã tới nơi.</string>
+
+
+    // error
+    <string name="errorRegistration">Tạo tài khoản không thành công !</string>
+    <string name="errorSignIn">Tài khoản hoặc mật khẩu không chính xác !</string>
+    <string name="title_activity_driver_map">DriverMapActivity</string>
+
+    // sucess
+
+
+</resources>

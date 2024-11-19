@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "947917436277",
+    "project_id": "dbgrabremake",
+    "storage_bucket": "dbgrabremake.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:947917436277:android:a9da2fdce742b2aa2c4f3c",
+        "android_client_info": {
+          "package_name": "com.example.doangrabremake"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "947917436277-20k5c6hidrrjr8q4vtfdv1t9gmhu5ggf.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.doangrabremake",
+            "certificate_hash": "6e654ab79e9c377bd1195404f9755b4ef0927bf8"
+          }
+        },
+        {
+          "client_id": "947917436277-viaq6o0o83kob8vs1snqs834t269nqp1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAVh5CJuXYQx2ymcIliFMgaHDHYE90plgc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "947917436277-viaq6o0o83kob8vs1snqs834t269nqp1.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
