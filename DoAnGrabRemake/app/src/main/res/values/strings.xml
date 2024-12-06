@@ -10,8 +10,13 @@
     <string name="btnSetting">Cài đặt</string>
     <string name="name">Họ và tên</string>
     <string name="phone">Số điện thoại</string>
+    <string name="car">Xe</string>
     <string name="btnInfoConfirm">Cập nhật</string>
     <string name="btnBack">Trở về</string>
+    <string name="txtViewDestination">Vị trí: --</string>
+    <string name="rdoUberType1">UberX</string>
+    <string name="rdoUberType2">UberBlack</string>
+    <string name="rdoUberType3">UberXl</string>
 
 
     // chuc nang

@@ -10,6 +10,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
@@ -36,10 +38,11 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class CustomerSettingActivity extends AppCompatActivity {
+public class DriverSettingActivity extends AppCompatActivity {
 
     private EditText mNameField;
     private EditText mPhoneField;
+    private EditText mCarField;
 
     private Button mConfirm;
     private Button mBack;
@@ -48,23 +51,23 @@ public class CustomerSettingActivity extends AppCompatActivity {
 
     // get current userId
     private FirebaseAuth mAuth;
-    private DatabaseReference mCustomerDatabase;
+    private DatabaseReference mDriverDatabase;
 
     private String userId;
     private String mProfileImageUrl;
+    private String mService;
 
     private Uri resultUri;
 
-    // dịa điểm đích
-    private String destination;
+    private RadioGroup mRadioGroup;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
-        setContentView(R.layout.activity_customer_setting);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.customerSettingActivity), (v, insets) -> {
+        setContentView(R.layout.activity_driver_setting);
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.driverSettingActivity), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
@@ -72,17 +75,20 @@ public class CustomerSettingActivity extends AppCompatActivity {
 
         mNameField = (EditText) findViewById(R.id.txtUserName);
         mPhoneField = (EditText) findViewById(R.id.txtPhone);
+        mCarField = (EditText) findViewById(R.id.txtCar);
 
         mConfirm = (Button) findViewById(R.id.btnConfirmInfo);
         mBack = (Button) findViewById(R.id.btnBack);
 
         mProfileImage = (ImageView) findViewById(R.id.profileImage);
 
+        mRadioGroup = (RadioGroup) findViewById(R.id.rdoGroup);
+
         mAuth = FirebaseAuth.getInstance();
         userId = mAuth.getCurrentUser().getUid();
 
-        mCustomerDatabase = FirebaseDatabase.getInstance().getReference()
-                .child("Users").child("Customers").child(userId);
+        mDriverDatabase = FirebaseDatabase.getInstance().getReference()
+                .child("Users").child("Drivers").child(userId);
 
         getUserInfo();
 
@@ -106,7 +112,7 @@ public class CustomerSettingActivity extends AppCompatActivity {
     }
 
     private void getUserInfo(){
-        mCustomerDatabase.addValueEventListener(new ValueEventListener() {
+        mDriverDatabase.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if(snapshot.exists() && snapshot.getChildrenCount()>0){
@@ -116,6 +122,27 @@ public class CustomerSettingActivity extends AppCompatActivity {
                     }
                     if(map.get("phone")!=null){
                         mPhoneField.setText(map.get("phone").toString());
+                    }
+                    if(map.get("car")!=null){
+                        mCarField.setText(map.get("car").toString());
+                    }
+                    if(map.get("service")!=null){
+                        mService = map.get("service").toString();
+
+                        // kiểm tra nhấn rdoBtn.
+                        switch (mService){
+                            case "UberX":
+                                mRadioGroup.check(R.id.UberX);
+                                break;
+                            case "UberBlack":
+                                mRadioGroup.check(R.id.UberBlack);
+                                break;
+                            case "UberXl":
+                                mRadioGroup.check(R.id.UberXl);
+                                break;
+                            default:
+                                throw new IllegalStateException("Unexpected value: " + mService);
+                        }
                     }
                     if(map.get("profileImageUrl")!=null){
                         mProfileImageUrl = map.get("profileImageUrl").toString();
@@ -135,11 +162,25 @@ public class CustomerSettingActivity extends AppCompatActivity {
     }
 
     private void saveUserInfomation(){
+
+        int selectedId = mRadioGroup.getCheckedRadioButtonId();
+
+        final RadioButton rdoButton = (RadioButton) findViewById(selectedId);
+
+        if (rdoButton.getText() == null){
+            return;
+        }
+
+        mService = rdoButton.getText().toString();
+
         Map userInfo = new HashMap();
         userInfo.put("name", mNameField.getText().toString());
         userInfo.put("phone", mPhoneField.getText().toString());
+        userInfo.put("car", mCarField.getText().toString());
+        userInfo.put("service", mService);
 
-        mCustomerDatabase.updateChildren(userInfo);
+
+        mDriverDatabase.updateChildren(userInfo);
 
         if (resultUri != null){
             StorageReference filePath = FirebaseStorage.getInstance().getReference()
@@ -177,7 +218,7 @@ public class CustomerSettingActivity extends AppCompatActivity {
 
                     Map newImage = new HashMap();
                     newImage.put("profileImageUrl", dowloadUrl.toString());
-                    mCustomerDatabase.updateChildren(newImage);
+                    mDriverDatabase.updateChildren(newImage);
 
                     finish();
                     return;

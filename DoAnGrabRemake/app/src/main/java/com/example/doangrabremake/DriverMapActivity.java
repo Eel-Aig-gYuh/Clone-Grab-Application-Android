@@ -26,6 +26,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 
 import com.google.android.gms.common.ConnectionResult;
@@ -65,6 +66,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
     LocationRequest mLocationRequest;
 
     private Button mLogout;
+    private Button mSetting;
 
     private String customerId = "";
 
@@ -77,7 +79,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
 
     private ImageView mCustomerProfileImage;
 
-    private TextView mCustomerName, mCustomerPhone;
+    private TextView mCustomerName, mCustomerPhone, mCustomerDestination;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -94,8 +96,10 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
 
         mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
+
+        // kiểm tra quyền cho phép truy cập vị trí
         if(ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED){
-            ActivityCompat.requestPermissions(DriverMapActivity.this, new String[] {Manifest.permission.ACCESS_FINE_LOCATION}, 1);
+            ActivityCompat.requestPermissions(DriverMapActivity.this, new String[] {Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_REQUEST_CODE);
         }
         else {
             mapFragment.getMapAsync(this);
@@ -107,8 +111,22 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
 
         mCustomerName = (TextView) findViewById(R.id.customerName);
         mCustomerPhone = (TextView) findViewById(R.id.customerPhone);
+        mCustomerDestination = (TextView) findViewById(R.id.customerDestination);
 
         mLogout = (Button) findViewById(R.id.logout);
+        mSetting = (Button) findViewById(R.id.setting);
+
+        // cài đặt thông tin cho driver
+        mSetting.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(DriverMapActivity.this, DriverSettingActivity.class);
+                startActivity(intent);
+                finish();
+                return;
+            }
+        });
+
         // đăng xuất
         mLogout.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -140,12 +158,11 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
 
         String driverId = FirebaseAuth.getInstance().getCurrentUser().getUid();
         DatabaseReference assignedCustomerRef = FirebaseDatabase.getInstance().getReference()
-                .child("Users").child("Drivers").child(driverId).child("customerRideId");
+                .child("Users").child("Drivers").child(driverId).child("customerRequest").child("customerRideId");
         assignedCustomerRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if(snapshot.exists()){
-                    Map<String, Object> map = (Map<String, Object>) snapshot.getValue();
 
                     customerId = snapshot.getValue().toString();
 
@@ -155,6 +172,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                     // lấy tọa độ để đón khách hàng.
                     getAssignedCustomerPickupLocation();
                     getAssignedCustomerInfo();
+                    getAssignedCustomerDestination();
 
                 }
                 else {
@@ -172,6 +190,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                     mCustomerInfo.setVisibility(View.GONE);
                     mCustomerName.setText("");
                     mCustomerPhone.setText("");
+                    mCustomerDestination.setText(R.string.txtViewDestination);
                     mCustomerProfileImage.setImageResource(R.mipmap.ic_default_avatar);
                 }
             }
@@ -215,6 +234,37 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
 
             }
         });
+    }
+
+    private void getAssignedCustomerDestination(){
+
+        // B2: begin ============>
+        // Do là đã thay đổi trong db nên là hàm này sẽ được kích hoạt
+        // driver sẽ biết được là customer nào sẽ được đón.
+
+        String driverId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        DatabaseReference assignedCustomerRef = FirebaseDatabase.getInstance().getReference()
+                .child("Users").child("Drivers").child(driverId).child("customerRequest").child("destination");
+        assignedCustomerRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if(snapshot.exists()){
+
+                    String destination = snapshot.getValue().toString();
+                    mCustomerDestination.setText("Vị trí: " + destination);
+
+                }
+                else {
+                    mCustomerDestination.setText(R.string.txtViewDestination);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+
     }
 
     private Marker pickupMarker;
@@ -371,8 +421,9 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
 
         // kiểm tra quyền cho phép truy cập vị trí
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            return;
+            ActivityCompat.requestPermissions(DriverMapActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_REQUEST_CODE);
         }
+
 
         // để làm mới location
         // bị lỗi ở đây không thể gọi phương thức requestLocationUpdates.
@@ -391,6 +442,26 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         geoFire.removeLocation(userId);
     }
 
+    // thêm cấp quyền bởi vì api của google không hỗ trợ cho android 6 trở lên khi gửi vị trí
+
+    final int LOCATION_REQUEST_CODE = 1;
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        switch (requestCode){
+            // néu bằng với request_code thì người dùng đã cấp quyền
+            case LOCATION_REQUEST_CODE:{
+                // nếu cho phép thì mới có thể chạy được một số hàm ở trên.
+                if (grantResults.length > 0 && grantResults[0]==PackageManager.PERMISSION_GRANTED){
+                    mapFragment.getMapAsync(this);
+                }
+                else{
+                    Toast.makeText(getApplicationContext(), "Cần được cấp quyền sử dụng vị trí.", Toast.LENGTH_LONG).show();
+                }
+                break;
+            }
+        }
+    }
 
     // chương trình chỉ cho phép driver available khi mở ứng dụng
     // khi tắt ứng dụng tương đương sẽ tắt khả năng khách tìm driver.

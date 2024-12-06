@@ -47,12 +47,100 @@
         </androidx.cardview.widget.CardView>
     </RelativeLayout>
 
-
-
-    <Button
-        android:id="@+id/btnRequest"
+    <LinearLayout
+        android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/btnCallUber"
-        android:layout_gravity="bottom"/>
+        android:layout_gravity="bottom">
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/driverInfo"
+            android:layout_gravity="bottom"
+            android:orientation="horizontal"
+            android:background="@android:color/white"/>
+
+        <ImageView
+            android:layout_width="100sp"
+            android:layout_height="100sp"
+            android:id="@+id/driverProfileImage"
+            android:src="@mipmap/ic_default_avatar"
+            android:padding="20sp"/>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingLeft="40sp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/driverName"
+                android:paddingBottom="10sp"
+                android:paddingTop="20sp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/driverPhone"
+                android:paddingBottom="10sp"
+                android:paddingTop="20sp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/driverCar"
+                android:paddingBottom="10sp"
+                android:paddingTop="20sp"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:background="@android:color/white"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <RadioGroup
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/rdoGroup"
+                android:orientation="horizontal">
+
+                <RadioButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/rdoUberType1"
+                    android:id="@+id/UberX"/>
+
+                <RadioButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/rdoUberType2"
+                    android:id="@+id/UberBlack"/>
+
+                <RadioButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/rdoUberType3"
+                    android:id="@+id/UberXl"/>
+
+            </RadioGroup>
+        </LinearLayout>
+
+
+        <Button
+            android:id="@+id/btnRequest"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/btnCallUber"
+            android:layout_gravity="bottom"/>
+    </LinearLayout>
+
+
+
+
 </FrameLayout>

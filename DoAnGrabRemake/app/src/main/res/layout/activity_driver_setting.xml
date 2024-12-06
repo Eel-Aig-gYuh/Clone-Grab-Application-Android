@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/driverSettingActivity"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".CustomerSettingActivity"
+    android:orientation="vertical"
+    android:padding="20sp">
+
+    <ImageView
+        android:layout_width="100sp"
+        android:layout_height="100sp"
+        android:id="@+id/profileImage"
+        android:src="@mipmap/ic_default_avatar"/>
+
+    <EditText
+        android:id="@+id/txtUserName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@null"
+        android:hint="@string/name"
+        android:layout_marginTop="20dp"
+        android:layout_marginBottom="20sp"/>
+
+    <EditText
+        android:id="@+id/txtPhone"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@null"
+        android:hint="@string/phone"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="20sp"
+        android:inputType="number"
+        tools:ignore="TextFields" />
+
+    <EditText
+        android:id="@+id/txtCar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@null"
+        android:hint="@string/car"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="20sp" />
+
+    <RadioGroup
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/rdoGroup"
+        android:orientation="horizontal">
+
+        <RadioButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/rdoUberType1"
+            android:id="@+id/UberX"/>
+
+        <RadioButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/rdoUberType2"
+            android:id="@+id/UberBlack"/>
+
+        <RadioButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/rdoUberType3"
+            android:id="@+id/UberXl"/>
+
+    </RadioGroup>
+
+    <Button
+        android:id="@+id/btnConfirmInfo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/btnInfoConfirm"/>
+
+    <Button
+        android:id="@+id/btnBack"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/btnBack"/>
+
+
+</LinearLayout>

@@ -20,6 +20,9 @@
         android:theme="@style/Theme.DoAnGrabRemake"
         tools:targetApi="31">
         <activity
+            android:name=".DriverSettingActivity"
+            android:exported="false" />
+        <activity
             android:name=".CustomerSettingActivity"
             android:exported="false" />
         <activity

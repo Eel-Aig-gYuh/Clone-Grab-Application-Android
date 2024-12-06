@@ -27,6 +27,11 @@ import android.os.Bundle;
 import android.os.PersistableBundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
+import android.widget.TextView;
 
 
 import com.google.android.gms.common.ConnectionResult;
@@ -46,6 +51,9 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.example.doangrabremake.databinding.ActivityDriverMapBinding;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.libraries.places.api.model.Place;
+import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
+import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
 import com.google.firebase.Firebase;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
@@ -54,8 +62,10 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 public class CustomerMapActivity extends FragmentActivity implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, com.google.android.gms.location.LocationListener {
@@ -75,6 +85,18 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
     private Boolean isRequestCancel = false;
 
     private Marker pickupMarker;
+
+    private String destination;
+    private String requestService;
+
+    // hiện thông tin khách hàng.
+    private LinearLayout mDriverInfo;
+
+    private ImageView mDriverProfileImage;
+
+    private TextView mDriverName, mDriverPhone, mDriverCar;
+
+    private RadioGroup mRadioGroup;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -102,6 +124,18 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
         mLogout = (Button) findViewById(R.id.logout);
         mRequest = (Button) findViewById(R.id.btnRequest);
         mSetting = (Button) findViewById(R.id.btnSetting);
+
+        // hiện thông tin khách hàng.
+        mDriverInfo = (LinearLayout) findViewById(R.id.driverInfo);
+
+        mDriverProfileImage = (ImageView) findViewById(R.id.driverProfileImage);
+
+        mRadioGroup = (RadioGroup) findViewById(R.id.rdoGroup);
+        mRadioGroup.check(R.id.UberX);
+
+        mDriverName = (TextView) findViewById(R.id.driverName);
+        mDriverPhone = (TextView) findViewById(R.id.driverPhone);
+        mDriverCar = (TextView) findViewById(R.id.driverCar);
 
 
         // đăng xuất
@@ -141,8 +175,8 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
 
                     if (driverFoundId != null){
                         DatabaseReference driverRef = FirebaseDatabase.getInstance()
-                                .getReference().child("Users").child("Drivers").child(driverFoundId);
-                        driverRef.setValue(true);
+                                .getReference().child("Users").child("Drivers").child(driverFoundId).child("customerRequest");
+                        driverRef.removeValue();
                         driverFoundId = null;
                     }
                     isDriverFound = false;
@@ -159,10 +193,29 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
                     if (pickupMarker != null){
                         pickupMarker.remove();
                     }
+                    if (mDriverMarker != null){
+                        mDriverMarker.remove();
+                    }
+                    // tắt thông tin khách hàng khi hủy.
+                    mDriverInfo.setVisibility(View.GONE);
+                    mDriverName.setText("");
+                    mDriverPhone.setText("");
+                    mDriverCar.setText("");
+                    mDriverProfileImage.setImageResource(R.mipmap.ic_default_avatar);
 
                     mRequest.setText(R.string.txtCallDriver);
                 }
                 else { // khách hàng không nhấn nút cancel.
+                    int selectedId = mRadioGroup.getCheckedRadioButtonId();
+
+                    final RadioButton rdoButton = (RadioButton) findViewById(selectedId);
+
+                    if (rdoButton.getText() == null){
+                        return;
+                    }
+
+                    requestService = rdoButton.getText().toString();
+
                     isRequestCancel = true;
 
                     // lưu thông tin người gọi vào db
@@ -206,28 +259,54 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
             // tìm thấy driver
             public void onKeyEntered(String key, GeoLocation location) {
                 if (!isDriverFound && isRequestCancel){
-                    isDriverFound = true;
-                    driverFoundId = key;
+                    DatabaseReference mCustomerDatabase = FirebaseDatabase.getInstance().getReference().child("Users").child("Drivers").child(key);
+                    // key = driverId
+                    mCustomerDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot snapshot) {
+                            // kiểm tra xem người dùng đã đăng kí chưa
+                            if (snapshot.exists() && snapshot.getChildrenCount()>0){
+                                Map<String, Object> driverMap = (Map<String, Object>) snapshot.getValue();
+                                // kiểm tra xem đã tìm thấy tài xế hay chưa.
+                                // bởi vì bản chất trình bắt sự kiện sẽ luôn chạy nhanh hơn code bên trong nó nên là phải kiểm tra
+                                if (isDriverFound){
+                                    return;
+                                }
 
-                    // luồng hoạt động: B1. begin ==============> Lấy tài xế gần nhất
-                    // trong db nhánh con sẽ giúp cho driver vị khách sẽ đón
+                                if(driverMap.get("service").equals(requestService)){
+                                    isDriverFound = true;
+                                    driverFoundId = snapshot.getKey();
 
-                    // thêm customerId vào database
-                    DatabaseReference driverRef = FirebaseDatabase.getInstance()
-                            .getReference().child("Users").child("Drivers").child(driverFoundId);
-                    String customerId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-                    HashMap map = new HashMap();
-                    map.put("customerRideId", customerId);
-                    driverRef.updateChildren(map);
+                                    // luồng hoạt động: B1. begin ==============> Lấy tài xế gần nhất
+                                    // trong db nhánh con sẽ giúp cho driver vị khách sẽ đón
 
-                    // B1: end <==================
+                                    // thêm customerId vào database
+                                    // hiện thông báo
+                                    DatabaseReference driverRef = FirebaseDatabase.getInstance()
+                                            .getReference().child("Users").child("Drivers").child(driverFoundId).child("customerRequest");
+                                    String customerId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+                                    HashMap map = new HashMap();
+                                    map.put("customerRideId", customerId);
+                                    // Hien thong bao vi tri dich
+                                    map.put("destination", destination);
+                                    driverRef.updateChildren(map);
 
-                    // B2: lấy vị trí của driver;
-                    // cổng dịch chuyển DriverMapActivity: AssignedCustomer
+                                    // B1: end <==================
 
-                    // trạng thái đang tìm vị trí tài xế
-                    getDriverLocation();
-                    mRequest.setText(R.string.txtWaitDriver);
+                                    // B2: lấy vị trí của driver;
+                                    // cổng dịch chuyển DriverMapActivity: AssignedCustomer
+
+                                    // trạng thái đang tìm vị trí tài xế
+                                    getDriverLocation();
+                                    getDriverInfo();
+                                    mRequest.setText(R.string.txtWaitDriver);
+                                }
+                            }
+                        }
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError error) {
+                        }
+                    });
                 }
 
             }
@@ -256,8 +335,69 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
 
             }
         });
+
+
+        // lấy chuổi thông tin người dùng
+        // khởi tạo.
+        AutocompleteSupportFragment autocompleteFragment = (AutocompleteSupportFragment)
+                getSupportFragmentManager().findFragmentById(R.id.autocomplete_fragment);
+
+        // cấu hình các trường dữ liệu địa điểm trả về (lấy ra id, và tên).
+        assert autocompleteFragment != null;
+        autocompleteFragment.setPlaceFields(Arrays.asList(Place.Field.ID, Place.Field.NAME));
+
+        // lắng nghe và xử lí sự kiện lựa chọn địa điểm
+        // khi có 1 sự kiện được chọn thì sẽ trả về tên địa điểm (getName) và id của địa điểm đó.
+        autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
+            @Override
+            public void onPlaceSelected(@NonNull Place place) {
+                // TODO: Get info about the selected place.
+                destination = place.getName().toString();
+            }
+
+
+            @Override
+            public void onError(@NonNull Status status) {
+                // TODO: Handle the error.
+            }
+        });
     }
 
+    private void getDriverInfo(){
+        // bật để hiển thị do trong .xml đã chỉnh props của linear là gone
+        mDriverInfo.setVisibility(View.VISIBLE);
+
+        DatabaseReference mCustomerDatabase = FirebaseDatabase.getInstance().getReference()
+                .child("Users").child("Drivers").child(driverFoundId);
+        mCustomerDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if(snapshot.exists() && snapshot.getChildrenCount()>0){
+                    Map<String, Object> map = (Map<String, Object>) snapshot.getValue();
+                    if(map.get("name")!=null){
+                        mDriverName.setText(map.get("name").toString());
+                    }
+                    if(map.get("phone")!=null){
+                        mDriverPhone.setText(map.get("phone").toString());
+                    }
+                    if(map.get("car")!=null){
+                        mDriverCar.setText(map.get("car").toString());
+                    }
+                    if(map.get("profileImageUrl")!=null){
+                        // glide bị lỗi.
+                        Glide.with(getApplication()).load(map.get("profileImageUrl").toString())
+                                .into(mDriverProfileImage);
+
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+    }
 
     // tạo node màu đỏ trên giao diện bản đồ.
     private Marker mDriverMarker;
@@ -344,9 +484,10 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
         // hàm tạo marker trên google map
 
         // check quyền
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            return;
+        if(ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED){
+            ActivityCompat.requestPermissions(CustomerMapActivity.this, new String[] {Manifest.permission.ACCESS_FINE_LOCATION}, 1);
         }
+
         buildGoogleApiClient();
         mMap.setMyLocationEnabled(true);
 
@@ -374,10 +515,6 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
         // làm di chuyển máy ảnh của API cùng với độ của người dùng khi di chuyển.
         mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
         mMap.animateCamera(CameraUpdateFactory.zoomTo(11));
-
-
-
-
     }
 
 
@@ -414,8 +551,8 @@ public class CustomerMapActivity extends FragmentActivity implements OnMapReadyC
     public void onConnected(@Nullable Bundle bundle) {
 
         // kiểm tra quyền cho phép truy cập vị trí
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            return;
+        if(ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED){
+            ActivityCompat.requestPermissions(CustomerMapActivity.this, new String[] {Manifest.permission.ACCESS_FINE_LOCATION}, 1);
         }
 
         // để làm mới location
